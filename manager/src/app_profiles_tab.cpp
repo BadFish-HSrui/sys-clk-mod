@@ -34,7 +34,7 @@
 AppProfilesTab::AppProfilesTab()
 {
     // Filter toggle
-    this->filterListItem = new brls::ToggleListItem("显示无配置的应用程序", this->showEmptyProfiles, "", "是", "否");
+    this->filterListItem = new brls::ToggleListItem("显示未配置的应用程序", this->showEmptyProfiles, "", "是", "否");
     filterListItem->getClickEvent()->subscribe([this](View* v)
     {
         this->refreshFilter();
@@ -154,12 +154,12 @@ void AppProfilesTab::updateEmptyListLabel(bool animate)
 {
     if (this->items.empty())
     {
-        this->emptyListLabel->setText("\uE140  您的Nintendo Switch上没有安装任何应用程序。");
+        this->emptyListLabel->setText("\uE140  没有安装任何应用程序。");
         this->emptyListLabel->show([](){}, animate);
     }
     else if (!this->showEmptyProfiles && this->profilesItems.empty())
     {
-        this->emptyListLabel->setText("\uE140  您目前没有任何定义配置文件的应用程序。");
+        this->emptyListLabel->setText("\uE140  没有已配置的应用程序。");
         this->emptyListLabel->show([](){}, animate);
     }
     else

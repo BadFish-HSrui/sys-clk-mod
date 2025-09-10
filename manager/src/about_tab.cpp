@@ -33,7 +33,7 @@ AboutTab::AboutTab()
     // Subtitle
     brls::Label *subTitle = new brls::Label(
         brls::LabelStyle::REGULAR,
-        "Nintendo Switch 超频/降频系统模块和前端应用，由 RetroNX 团队开发", 
+        "Switch 超频/降频插件，由 RetroNX 团队开发\n葡萄糖酸菜鱼 汉化", 
         true
     );
     subTitle->setHorizontalAlign(NVG_ALIGN_CENTER);

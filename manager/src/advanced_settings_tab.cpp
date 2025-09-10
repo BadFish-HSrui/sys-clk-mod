@@ -128,7 +128,7 @@ AdvancedSettingsTab::AdvancedSettingsTab()
                 // Validate the value
                 if (value < 0)
                 {
-                    brls::Application::notify("\uE5CD Couldn't save configuration: invalid value (is negative)");
+                    brls::Application::notify("\uE5CD 无法保存配置：无效值（为负数）");
                     configItem->setValue(std::to_string(this->configValues.values[config]));
                     return;
                 }
@@ -137,7 +137,7 @@ AdvancedSettingsTab::AdvancedSettingsTab()
 
                 if (!sysclkValidConfigValue(config, uvalue))
                 {
-                    brls::Application::notify("\uE5CD Couldn't save configuration: invalid value");
+                    brls::Application::notify("\uE5CD 无法保存配置：无效值");
                     configItem->setValue(std::to_string(this->configValues.values[config]));
                     return;
                 }
@@ -146,11 +146,11 @@ AdvancedSettingsTab::AdvancedSettingsTab()
                 this->configValues.values[config] = uvalue;
                 sysclkIpcSetConfigValues(&this->configValues);
 
-                brls::Application::notify("\uE14B Configuration saved");
+                brls::Application::notify("\uE14B 配置已保存");
             }
             catch(const std::exception& e)
             {
-                brls::Logger::error("Unable to parse config value %s: %s", configItem->getValue().c_str(), e.what());
+                brls::Logger::error("无法解析配置值 %s: %s", configItem->getValue().c_str(), e.what());
             }
         });
 
