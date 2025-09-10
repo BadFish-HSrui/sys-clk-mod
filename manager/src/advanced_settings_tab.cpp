@@ -41,10 +41,10 @@ AdvancedSettingsTab::AdvancedSettingsTab()
     // Create UI
 
     // Disclaimer
-    this->addView(new brls::Label(brls::LabelStyle::REGULAR, "\uE140  Please only alter these settings if you know what you are doing.", true));
+    this->addView(new brls::Label(brls::LabelStyle::REGULAR, "\uE140  请在了解后果的情况下修改！", true));
 
     // Temporary overrides
-    this->addView(new brls::Header("Temporary overrides"));
+    this->addView(new brls::Header("临时配置"));
 
     // CPU
     brls::SelectListItem *cpuFreqListItem = createFreqListItem(SysClkModule_CPU, context.overrideFreqs[SysClkModule_CPU] / 1000000);
@@ -97,7 +97,7 @@ AdvancedSettingsTab::AdvancedSettingsTab()
     this->addView(memFreqListItem);
 
     // Config
-    this->addView(new brls::Header("Configuration"));
+    this->addView(new brls::Header("配置"));
 
     // Logging
     // TODO: add a logger view and put the button to enter it here
@@ -163,15 +163,15 @@ std::string AdvancedSettingsTab::getDescriptionForConfig(SysClkConfigValue confi
     switch (config)
     {
         case SysClkConfigValue_CsvWriteIntervalMs:
-            return "How often to update /config/sys-clk/context.csv (in milliseconds)\n\uE016  Use 0 to disable";
+            return "更新 /config/sys-clk/context.csv 的频率（毫秒）\n\uE016  设为 0 禁用";
         case SysClkConfigValue_TempLogIntervalMs:
-            return "How often to log temperatures (in milliseconds)\n\uE016  Use 0 to disable";
+            return "记录温度的频率（毫秒）\n\uE016  设为 0 禁用";
         case SysClkConfigValue_FreqLogIntervalMs:
-            return "How often to log real frequencies (in milliseconds)\n\uE016  Use 0 to disable";
+            return "记录实际频率的频率（毫秒）\n\uE016  设为 0 禁用";
         case SysClkConfigValue_PowerLogIntervalMs:
-            return "How often to log power consumption (in milliseconds)\n\uE016  Use 0 to disable";
+            return "记录功耗的频率（毫秒）\n\uE016  设为 0 禁用";
         case SysClkConfigValue_PollingIntervalMs:
-            return "How fast to check and apply profiles (in milliseconds)";
+            return "检查和应用配置文件的速度（毫秒）";
         default:
             return "";
     }

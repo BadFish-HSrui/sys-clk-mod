@@ -25,32 +25,32 @@
 CheatSheetTab::CheatSheetTab()
 {
     // CPU
-    this->addView(new brls::Header("CPU Clocks"));
+    this->addView(new brls::Header("CPU 频率"));
     brls::Table *cpuTable = new brls::Table();
 
-    cpuTable->addRow(brls::TableRowType::BODY, "Maximum", "1785 MHz");
-    cpuTable->addRow(brls::TableRowType::BODY, "Official Docked and Handheld", "1020 MHz");
+    cpuTable->addRow(brls::TableRowType::BODY, "最大", "1785 MHz");
+    cpuTable->addRow(brls::TableRowType::BODY, "官方底座和手持模式", "1020 MHz");
 
     this->addView(cpuTable);
 
     // GPU
-    this->addView(new brls::Header("GPU Clocks"));
+    this->addView(new brls::Header("GPU 频率"));
     brls::Table *gpuTable = new brls::Table();
 
-    gpuTable->addRow(brls::TableRowType::BODY, "Maximum", "921 MHz");
-    gpuTable->addRow(brls::TableRowType::BODY, "Official Docked", "768 MHz");
-    gpuTable->addRow(brls::TableRowType::BODY, "Maximum Mariko Handheld", "614 MHz");
-    gpuTable->addRow(brls::TableRowType::BODY, "Maximum Erista Handheld", "460 MHz");
-    gpuTable->addRow(brls::TableRowType::BODY, "Official Handheld", "384 MHz");
+    gpuTable->addRow(brls::TableRowType::BODY, "最大", "921 MHz");
+    gpuTable->addRow(brls::TableRowType::BODY, "官方底座模式", "768 MHz");
+    gpuTable->addRow(brls::TableRowType::BODY, "Mariko芯片手持模式最大值", "614 MHz");
+    gpuTable->addRow(brls::TableRowType::BODY, "Erista芯片手持模式最大值", "460 MHz");
+    gpuTable->addRow(brls::TableRowType::BODY, "官方手持模式", "384 MHz");
 
     this->addView(gpuTable);
 
     // MEM
-    this->addView(new brls::Header("MEM Clocks"));
+    this->addView(new brls::Header("MEM 频率"));
     brls::Table *memTable = new brls::Table();
 
-    memTable->addRow(brls::TableRowType::BODY, "Maximum, Official Docked", "1600 MHz");
-    memTable->addRow(brls::TableRowType::BODY, "Official Handheld", "1331 MHz");
+    memTable->addRow(brls::TableRowType::BODY, "最大、官方底座模式", "1600 MHz");
+    memTable->addRow(brls::TableRowType::BODY, "官方手持模式", "1331 MHz");
 
     this->addView(memTable);
 }
