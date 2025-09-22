@@ -159,8 +159,6 @@ void BaseMenuGui::preDraw(tsl::gfx::Renderer* renderer) {
     renderer->drawString(displayStrings[16], false, dataPositions[4], y, SMALL_TEXT_SIZE, tsl::infoTextColor);  // Power avg
 }
 
-Result sysclkCheck = 1;
-
 // Optimized refresh - now does all the string formatting once per second
 void BaseMenuGui::refresh()
 {
@@ -177,72 +175,89 @@ void BaseMenuGui::refresh()
         this->context = new SysClkContext;
     }
 
+    // === ULTRA-FAST VOLTAGE READING ===
+    // Pre-computed domain configuration based on hardware
+    static const PowerDomainId domains[] = {
+        PcvPowerDomainId_Max77621_Cpu,    // [0] CPU
+        PcvPowerDomainId_Max77621_Gpu,    // [1] GPU  
+        PcvPowerDomainId_Max77812_Dram,   // [2] EMC/DRAM - Mariko only
+        PcvPowerDomainId_Max77620_Sd0,    // [3] SOC - EOS only
+        PcvPowerDomainId_Max77620_Sd1     // [4] VDD2 - EOS only
+    };
     
-    //if (R_SUCCEEDED(sysclkCheck)) {
-    //    SysClkContext sysclkCTX;
-    if (R_SUCCEEDED(sysclkIpcGetCurrentContext(this->context))) {
-        if (isUsingEOS) {
-            cpuVoltageUv = this->context->realVolts[0]; 
-            gpuVoltageUv = this->context->realVolts[1]; 
-            socVoltageUv = this->context->realVolts[3];
-            
-            // Unpack realVolts[2] into separate EMC and VDD voltages
-            const u32 packed = this->context->realVolts[2];
-            const float vdd2_mV_f = packed / 100000.0f;     // Float division preserves decimals
-            const u32 vddq_mV = (packed % 10000) / 10;      // VDDQ can stay integer
-            
-            vddVoltageUv = (u32)(vdd2_mV_f * 1000);  // Convert 1212.5 mV → 1212500 µV
-            emcVoltageUv = vddq_mV * 1000;           // Convert to µV
-        }
-    }
-    //}
-
-    if (!isUsingEOS) {
-        // === ULTRA-FAST VOLTAGE READING ===
-        // Pre-computed domain configuration based on hardware
-        static constexpr PowerDomainId domains[] = {
-            PcvPowerDomainId_Max77621_Cpu,    // [0] CPU
-            PcvPowerDomainId_Max77621_Gpu,    // [1] GPU  
-            PcvPowerDomainId_Max77812_Dram,   // [2] EMC/DRAM - Mariko only
-            PcvPowerDomainId_Max77620_Sd0,    // [3] SOC - EOS only
-            PcvPowerDomainId_Max77620_Sd1     // [4] VDD2 - EOS only
-        };
-        
-        // Voltage array for direct indexing
-        u32* voltages[] = {&cpuVoltageUv, &gpuVoltageUv, &emcVoltageUv, &socVoltageUv, &vddVoltageUv};
-
-        // Helper to safely read a voltage or set it to 0
-        auto readVoltage = [&](int idx) {
-            RgltrSession session;
-            if (R_SUCCEEDED(rgltrOpenSession(&session, domains[idx]))) {
-                if (R_FAILED(rgltrGetVoltage(&session, voltages[idx]))) {
-                    *voltages[idx] = 0;
+    // Voltage array for direct indexing
+    u32* voltages[] = {&cpuVoltageUv, &gpuVoltageUv, &emcVoltageUv, &socVoltageUv, &vddVoltageUv};
+    
+    // Single regulator init/exit cycle
+    if (R_SUCCEEDED(rgltrInitialize())) [[likely]] {
+        if (IsMariko()) {
+            if (isUsingEOS) {
+                // Mariko with EOS: all 5 domains
+                for (int i = 0; i < 5; ++i) {
+                    RgltrSession session;
+                    if (R_SUCCEEDED(rgltrOpenSession(&session, domains[i]))) [[likely]] {
+                        if (R_FAILED(rgltrGetVoltage(&session, voltages[i]))) {
+                            *voltages[i] = 0;
+                        }
+                        rgltrCloseSession(&session);
+                    } else {
+                        *voltages[i] = 0;
+                    }
                 }
-                rgltrCloseSession(&session);
             } else {
-                *voltages[idx] = 0;
-            }
-        };
-        
-        // Single regulator init/exit cycle
-        if (R_SUCCEEDED(rgltrInitialize())) [[likely]] {
-            for (int i = 0; i < 5; ++i) {
-                if (!IsMariko() && i == 2) {
-                    *voltages[i] = 0; // Skip DRAM domain for Erista
-                    continue;
+                // Mariko without EOS: CPU, GPU, DRAM only (no Sd0/Sd1)
+                for (int i = 0; i < 3; ++i) {
+                    RgltrSession session;
+                    if (R_SUCCEEDED(rgltrOpenSession(&session, domains[i]))) [[likely]] {
+                        if (R_FAILED(rgltrGetVoltage(&session, voltages[i]))) {
+                            *voltages[i] = 0;
+                        }
+                        rgltrCloseSession(&session);
+                    } else {
+                        *voltages[i] = 0;
+                    }
                 }
-                readVoltage(i);
+                socVoltageUv = vddVoltageUv = 0;
             }
-        
-            if (!IsMariko()) {
-                emcVoltageUv = 0; // Erista never supports DRAM
-            }
-        
-            rgltrExit();
         } else {
-            // Zero all voltages on regulator failure
-            memset(&cpuVoltageUv, 0, sizeof(u32) * 5);
+            // Erista
+            if (isUsingEOS) {
+                // Erista with EOS: CPU, GPU, SOC, VDD (no DRAM)
+                for (int i = 0; i < 5; ++i) {
+                    if (i == 2) continue; // Skip DRAM domain
+                    
+                    RgltrSession session;
+                    if (R_SUCCEEDED(rgltrOpenSession(&session, domains[i]))) [[likely]] {
+                        if (R_FAILED(rgltrGetVoltage(&session, voltages[i]))) {
+                            *voltages[i] = 0;
+                        }
+                        rgltrCloseSession(&session);
+                    } else {
+                        *voltages[i] = 0;
+                    }
+                }
+                emcVoltageUv = 0; // Erista never supports DRAM
+            } else {
+                // Erista without EOS: CPU and GPU only
+                for (int i = 0; i < 2; ++i) {
+                    RgltrSession session;
+                    if (R_SUCCEEDED(rgltrOpenSession(&session, domains[i]))) [[likely]] {
+                        if (R_FAILED(rgltrGetVoltage(&session, voltages[i]))) {
+                            *voltages[i] = 0;
+                        }
+                        rgltrCloseSession(&session);
+                    } else {
+                        *voltages[i] = 0;
+                    }
+                }
+                emcVoltageUv = socVoltageUv = vddVoltageUv = 0;
+            }
         }
+        
+        rgltrExit();
+    } else {
+        // Zero all voltages on regulator failure
+        memset(&cpuVoltageUv, 0, sizeof(u32) * 5);
     }
 
     // === SYSCLK CONTEXT UPDATE ===
