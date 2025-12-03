@@ -30,6 +30,7 @@ void MainGui::listUI()
 
             this->lastContextUpdate = armGetSystemTick();
             this->context->enabled = state;
+            enabledToggle->triggerClickAnimation();
         });
         this->listElement->addItem(this->enabledToggle);
     }
@@ -93,9 +94,9 @@ void MainGui::listUI()
 
 void MainGui::refresh()
 {
-    static bool isUsingEOS = usingEOS();
     BaseMenuGui::refresh();
-    if(!isUsingEOS && this->context) {
-        this->enabledToggle->setState(this->context->enabled);
-    }
+    //if(this->context)
+    //{
+    //    this->enabledToggle->setState(this->context->enabled);
+    //}
 }
